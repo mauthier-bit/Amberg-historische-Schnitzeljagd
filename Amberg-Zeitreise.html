@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1f5f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Zeitreise durch Amberg</title>
+<style>
+/* =========================================================================
+   FARBEN & DESIGN-TOKENS
+   ========================================================================= */
+:root{
+  --bg:#ece3cc; --bg2:#f5efdd; --card:#fbf6e8;
+  --ink:#2a2420; --muted:#6b6152; --line:#d2c39f;
+  --accent:#1f5f8b;      /* Vils-Blau  */
+  --accent2:#a8432a;     /* Ziegel-Rot */
+  --good:#3f7d3f; --warn:#c9772a; --bad:#b23a2e;
+  --brick:#a8432a; --brick-ink:#fbf6e8;
+  --shadow:0 6px 20px rgba(60,45,25,.18);
+  --radius:18px;
+}
+[data-theme="dark"]{
+  --bg:#141824; --bg2:#1b2130; --card:#212a3a;
+  --ink:#eae6da; --muted:#9aa3b4; --line:#313c50;
+  --accent:#5aa9d6; --accent2:#e0895a;
+  --good:#6bbf6b; --warn:#e0a44a; --bad:#e0685c;
+  --brick:#8f3a26; --brick-ink:#f3e7d6;
+  --shadow:0 6px 22px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--bg); color:var(--ink);
+  line-height:1.5; overscroll-behavior-y:contain;
+  -webkit-text-size-adjust:100%;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;}
+
+/* ---- Kopfzeile ---- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:var(--bg2); border-bottom:3px solid var(--accent);
+  padding:10px 14px; display:flex;align-items:center;gap:10px;
+  padding-top:calc(10px + env(safe-area-inset-top));
+}
+header .brand{font-weight:800;font-size:17px;letter-spacing:.3px;flex:1;display:flex;align-items:center;gap:8px;}
+header .brand .glyph{font-size:20px;}
+.iconbtn{
+  border:2px solid var(--line);background:var(--card);color:var(--ink);
+  width:44px;height:44px;border-radius:12px;font-size:19px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.iconbtn:active{transform:scale(.94);}
+
+main{flex:1;padding:16px 16px 40px;}
+.hidden{display:none !important;}
+
+/* ---- Mauer-Fortschritt ---- */
+.wall{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:4px 0 2px;}
+.brick{
+  width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;background:var(--line);color:transparent;
+  border:1px solid rgba(0,0,0,.12);transition:transform .35s,background .35s,color .35s;
+}
+.brick.filled{background:var(--brick);color:var(--brick-ink);box-shadow:0 2px 6px rgba(0,0,0,.2);animation:pop .4s;}
+@keyframes pop{0%{transform:scale(0.4) rotate(-8deg);}70%{transform:scale(1.15) rotate(3deg);}100%{transform:scale(1);}}
+.wall-cap{text-align:center;color:var(--muted);font-size:12.5px;margin-top:6px;letter-spacing:.5px;}
+
+/* ---- Karten ---- */
+.card{
+  background:var(--card);border:2px solid var(--line);border-radius:var(--radius);
+  padding:18px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);}
+h1{font-size:26px;line-height:1.15;margin:6px 0 10px;letter-spacing:.3px;}
+h2{font-size:21px;margin:2px 0 10px;}
+p{margin:0 0 12px;}
+.lead{font-size:16.5px;}
+
+/* ---- Buttons ---- */
+.btn{
+  display:block;width:100%;border:none;border-radius:14px;
+  padding:16px;font-size:18px;font-weight:800;cursor:pointer;
+  background:var(--accent2);color:#fff;box-shadow:var(--shadow);letter-spacing:.3px;
+}
+.btn:active{transform:translateY(1px) scale(.99);}
+.btn.secondary{background:var(--accent);}
+.btn.ghost{background:transparent;color:var(--accent);box-shadow:none;border:2px solid var(--line);}
+.btn.small{padding:12px;font-size:15px;}
+.btn+.btn{margin-top:10px;}
+.link{background:none;border:none;color:var(--accent);font-weight:700;font-size:14px;cursor:pointer;text-decoration:underline;padding:8px;}
+
+/* ---- Eingabe ---- */
+.answer-row{display:flex;gap:8px;margin:6px 0 4px;}
+input[type=text]{
+  flex:1;font-size:19px;padding:14px;border-radius:12px;border:2px solid var(--line);
+  background:var(--bg2);color:var(--ink);min-width:0;
+}
+input[type=text]:focus{outline:none;border-color:var(--accent);}
+.feedback{font-weight:800;margin:8px 0 0;min-height:22px;}
+.feedback.ok{color:var(--good);}
+.feedback.no{color:var(--bad);}
+.hintbox{margin-top:10px;padding:12px 14px;border-left:4px solid var(--warn);background:var(--bg2);border-radius:8px;font-size:15px;}
+
+/* ---- Stationsliste ---- */
+.station-item{
+  display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;
+  border:2px solid var(--line);background:var(--card);margin-bottom:10px;text-align:left;
+  width:100%;cursor:pointer;color:var(--ink);
+}
+.station-item:disabled{opacity:.55;cursor:not-allowed;}
+.station-item .num{
+  width:38px;height:38px;flex:none;border-radius:10px;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;
+}
+.station-item.done .num{background:var(--good);}
+.station-item.locked .num{background:var(--muted);}
+.station-item .st-body{flex:1;min-width:0;}
+.station-item .st-name{font-weight:800;font-size:16px;}
+.station-item .st-sub{font-size:13px;color:var(--muted);}
+.station-item .st-state{font-size:22px;flex:none;}
+
+/* ---- GPS-Radar / Kompass ---- */
+.radar-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 2px;}
+.compass{
+  width:170px;height:170px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 50% 40%,var(--bg2),var(--card));
+  border:6px solid var(--accent);box-shadow:var(--shadow);
+}
+.compass .cardinal{position:absolute;font-size:12px;font-weight:800;color:var(--muted);left:50%;top:50%;transform:translate(-50%,-50%);}
+.compass .n{top:10px;} .compass .s{top:auto;bottom:8px;} .compass .e{left:auto;right:10px;} .compass .w{left:10px;}
+.needle{
+  position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:center;
+  transition:transform .25s ease-out;
+}
+.needle::before{
+  content:"";position:absolute;left:-11px;top:-64px;
+  border-left:11px solid transparent;border-right:11px solid transparent;
+  border-bottom:60px solid var(--accent2);
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));
+}
+.needle::after{
+  content:"";position:absolute;left:-7px;top:4px;
+  border-left:7px solid transparent;border-right:7px solid transparent;
+  border-top:40px solid var(--line);
+}
+.dist{font-size:34px;font-weight:900;letter-spacing:.5px;}
+.dist small{font-size:16px;font-weight:700;color:var(--muted);}
+.proximity{font-size:15px;font-weight:800;padding:5px 12px;border-radius:999px;}
+.prox-cold{background:#cfe4f1;color:#134a6b;} .prox-warm{background:#f6e2c4;color:#7a4410;} .prox-hot{background:#cdeecd;color:#1e5a1e;}
+[data-theme="dark"] .prox-cold{background:#1c3a4d;color:#a9d6ef;}
+[data-theme="dark"] .prox-warm{background:#4a3411;color:#f0c98a;}
+[data-theme="dark"] .prox-hot{background:#1e3a1e;color:#a9e0a9;}
+.gps-note{font-size:13px;color:var(--muted);text-align:center;margin-top:8px;}
+.finder-hint{background:var(--bg2);border-radius:12px;padding:12px 14px;font-size:15px;text-align:center;border:1px dashed var(--line);}
+
+.badge{display:inline-block;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--accent);color:#fff;margin-bottom:8px;letter-spacing:.5px;}
+.badge.grey{background:var(--muted);}
+.divider{height:1px;background:var(--line);margin:14px 0;}
+.centered{text-align:center;}
+.small-muted{font-size:13px;color:var(--muted);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);}
+.settings-row:last-child{border-bottom:none;}
+.confetti{position:fixed;top:-10px;font-size:22px;pointer-events:none;z-index:200;animation:fall linear forwards;}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001s !important;transition-duration:.05s !important;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><span class="glyph">🏰</span><span>Zeitreise durch Amberg</span></div>
+    <button class="iconbtn" id="btnTheme" title="Tag / Nacht" aria-label="Tag- oder Nachtmodus">🌙</button>
+    <button class="iconbtn" id="btnHome" title="Übersicht" aria-label="Zur Übersicht">🧭</button>
+  </header>
+  <main id="main"><!-- Inhalt wird per JavaScript eingesetzt --></main>
+</div>
+
+<script>
+/* =========================================================================
+   ▓▓▓  KONFIGURATION – HIER kannst du (Mike) alles anpassen  ▓▓▓
+   -------------------------------------------------------------------------
+   • coords : GPS-Koordinaten der Station (recherchiert – vor Ort prüfen!)
+   • answers: alle akzeptierten Antworten (Groß/Klein & Komma egal)
+   • Zahlen bitte mit Dezimalkomma im Text (z.B. "2,5 Meter").
+   Nach einem Testlauf einfach die Werte unten korrigieren.
+   ========================================================================= */
+
+const SETTINGS = {
+  unlockRadiusM : 35,      // Radius in Metern, ab dem eine Station "erreicht" gilt
+  requireGPS    : true,    // false = Aufgaben sofort spielbar (z.B. zum Testen am Schreibtisch)
+  sequential    : true,    // true = Stationen der Reihe nach; false = frei wählbar
+  teacherCode   : "1034",  // Lehrer-Code (Ersterwähnung Ambergs) – schaltet Stationen von Hand frei / öffnet Test-Modus
+  startRiddleAnswer : ["stadtbrille","stadt brille","die stadtbrille"], // Antwort des Start-Rätsels
+  solutionWord  : "STADTMAUER"   // Lösungswort, das sich Stein für Stein aufbaut
+};
+
+const STATIONS = [
+  {
+    name:"Nabburger Tor", emoji:"🏯", letter:"S",
+    coords:{lat:49.4447872, lng:11.8626106},
+    finder:"Ein mächtiges Stadttor mit zwei runden Türmen im Osten der Altstadt.",
+    history:"Das Nabburger Tor ist das prächtigste der alten Amberger Stadttore. Es wurde vor sehr langer Zeit gebaut – schon im Jahr 1382 stand es in einer Urkunde. Um 1587 bekam es sein schmuckes Aussehen mit den beiden dicken Rundtürmen. Es gehört zur fast 3 Kilometer langen Stadtmauer, die die Altstadt wie ein Ei umschließt. Früher hatte die Mauer viele Türme und Tore und machte Amberg beinahe uneinnehmbar.",
+    task:"Schau dir das Tor genau an: Wie viele große runde Türme hat das Nabburger Tor?",
+    answers:["2","zwei"],
+    hint:"Links und rechts vom Torbogen steht je ein runder Turm – zähl beide."
+  },
+  {
+    name:"Rathaus am Marktplatz", emoji:"🏛️", letter:"T",
+    coords:{lat:49.4455224, lng:11.8586255},
+    finder:"Das prächtige Haus mit den Bögen und der Turmuhr am großen Platz mitten in der Stadt.",
+    history:"Das Rathaus steht am schönsten Platz der Stadt. Schon vor über 650 Jahren stand hier ein Rathaus. Nach einem großen Brand im Jahr 1356 wurde es neu aufgebaut. Es ist teils gotisch, teils im Stil der Renaissance gebaut. Bis heute arbeitet hier der Bürgermeister von Amberg.",
+    task:"Wie heißt der große Platz, an dem das Rathaus steht? Lies es auf einem Straßenschild an einer Hausecke.",
+    answers:["marktplatz","markt platz","der marktplatz","am marktplatz"],
+    hint:"Suche an einer Hausecke ein Straßenschild. Das Wort endet auf …platz."
+  },
+  {
+    name:"Hochzeitsbrunnen", emoji:"⛲", letter:"A",
+    coords:{lat:49.4453747, lng:11.8581949},
+    finder:"Direkt vor dem Rathaus plätschert ein Brunnen mit lustigen Figuren.",
+    history:"Dieser Brunnen erinnert an die berühmte „Amberger Hochzeit“ im Jahr 1474. Damals heiratete Prinzessin Margarete aus Bayern-Landshut den Pfälzer Prinzen Philipp – mitten in Amberg. Die Feier dauerte ganze fünf Tage! Der Brunnen wurde im Jahr 2000 vom Künstler Engelbert Süß geschaffen. Zwei der Figuren sind übrigens lustige Narren.",
+    task:"Auf dem Brunnen stehen Figuren. Zähle sie: Wie viele Figuren siehst du?",
+    answers:["4","vier"],
+    hint:"Es sind das Brautpaar und zwei Narren mit Narrenkappe – zähl alle zusammen."
+  },
+  {
+    name:"Basilika St. Martin", emoji:"⛪", letter:"D",
+    coords:{lat:49.4449638, lng:11.8580903},
+    finder:"Die riesige Kirche mit dem sehr hohen Turm – kaum zu übersehen.",
+    history:"Diese gewaltige Kirche wurde in rund 100 Jahren gebaut und um 1521 fertig. Ihr Turm ist fast 92 Meter hoch! Nach dem Dom in Regensburg ist St. Martin die größte gotische Kirche der ganzen Oberpfalz. Benannt ist sie nach einem Heiligen, der – so erzählt die Legende – seinen warmen Mantel mit einem frierenden armen Mann teilte.",
+    task:"Nach welchem Heiligen ist die Kirche benannt? Sein Name steckt im Namen der Kirche.",
+    answers:["martin","sankt martin","st martin","st. martin","der heilige martin","heiliger martin"],
+    hint:"Denk an den Laternenumzug im November … Sankt …?"
+  },
+  {
+    name:"Kurfürstliches Schloss", emoji:"🏰", letter:"T",
+    coords:{lat:49.4431497, lng:11.8580049},
+    finder:"Ein großes altes Schloss nahe am Fluss – heute ist das Landratsamt darin.",
+    history:"Dieses Schloss am Fluss Vils wurde vor sehr langer Zeit gebaut – man begann um das Jahr 1417 damit. Erst war es eine wehrhafte Burg mit einem doppelten Wassergraben. Später machten die Kurfürsten daraus einen prächtigen Wohnsitz. Heute sitzt darin das Landratsamt. Über die Stadtbrille ist das Schloss mit dem alten Zeughaus verbunden.",
+    task:"In welchem Jahr begann man, das Schloss zu bauen? (Die Zahl steht oben im Text.)",
+    answers:["1417"],
+    hint:"Lies den Infotext noch einmal – die Jahreszahl beginnt mit 14…"
+  },
+  {
+    name:"Stadtbrille", emoji:"👓", letter:"M",
+    coords:{lat:49.4428257, lng:11.8573225},
+    finder:"Der berühmte Torbau über die Vils – im Wasser sieht er aus wie eine Brille.",
+    history:"Die Stadtbrille ist das Wahrzeichen von Amberg. Es ist ein Wassertor über dem Fluss Vils und etwa 46 Meter lang. Zwei seiner Bögen spiegeln sich im Wasser – zusammen sehen sie aus wie eine riesige Brille. Deshalb der lustige Name! Kein anderes Bauwerk in Amberg wird so oft fotografiert.",
+    task:"Schau ins Wasser: Wie viele Bögen spiegeln sich, sodass die „Brille“ entsteht?",
+    answers:["2","zwei"],
+    hint:"Ein Bogen und sein Spiegelbild ergeben ein Brillenglas. Zwei Bögen = zwei Gläser."
+  },
+  {
+    name:"Wingershofer Tor", emoji:"🚪", letter:"A",
+    coords:{lat:49.4428014, lng:11.8555835},
+    finder:"Ein Stadttor im Südwesten der alten Stadtmauer.",
+    history:"Das Wingershofer Tor stammt aus dem 16. Jahrhundert. Hinter dem Torbogen liegt ein „Zwinger“ – ein enger Hof zwischen zwei Mauern. Dort mussten früher Menschen und Fuhrwerke anhalten, bevor die Wächter sie in die Stadt ließen. So konnte man gut aufpassen, wer hereinkam.",
+    task:"Fühl einmal vorsichtig: Woraus ist das Tor gebaut – aus Holz oder aus Stein?",
+    answers:["stein","aus stein","steinen","aus steinen"],
+    hint:"Es ist hart, kalt und grau – ganz sicher kein Holz."
+  },
+  {
+    name:"Eh’häusl – kleinstes Hotel der Welt", emoji:"🏠", letter:"U",
+    coords:{lat:49.4447778, lng:11.8526583},
+    finder:"Ein winzig schmales Häuschen, eingeklemmt zwischen zwei größeren Häusern.",
+    history:"Das „Eh’häusl“ ist als kleinstes Hotel der Welt berühmt. Es füllt eine Lücke von nur etwa 2,5 Metern Breite! Gebaut wurde es 1728. Damals durfte man nur heiraten, wenn einem ein Haus gehörte. Also kauften Paare dieses winzige Häuschen, heirateten – und verkauften es danach gleich an das nächste Paar weiter.",
+    task:"Wie breit ist das schmale Häuschen ungefähr? (Steht im Text – Zahl mit Komma.)",
+    answers:["2,5","2.5","2,5 meter","2.5 meter","zweieinhalb","zweikommafünf"],
+    hint:"Es ist schmaler, als ein Auto lang ist – nur etwa 2 einhalb Meter."
+  },
+  {
+    name:"Vilstor", emoji:"🌉", letter:"E",
+    coords:{lat:49.446728, lng:11.8530729},
+    finder:"Ein alter Torturm direkt am Fluss, im Westen der Altstadt.",
+    history:"Das Vilstor ist ein altes Stadttor und nach dem Fluss Vils benannt, der mitten durch Amberg fließt. Früher gab es hier eine Zugbrücke. Wenn du nach oben zum Turm schaust, siehst du noch die hölzernen Rollen, mit denen die Brücke hochgezogen wurde – bei Gefahr war die Stadt so gut geschützt.",
+    task:"Nach welchem Fluss ist dieses Tor benannt? Der Fluss fließt mitten durch Amberg.",
+    answers:["vils","die vils","fluss vils"],
+    hint:"Der Name des Flusses steckt schon im Namen des Tores: „…tor“."
+  },
+  {
+    name:"Ziegeltor", emoji:"🧱", letter:"R",
+    coords:{lat:49.4479646, lng:11.8581889},
+    finder:"Ein gotisches Tor im Norden, das man über eine kleine Brücke erreicht.",
+    history:"Das Ziegeltor ist eines von vier Stadttoren, durch die man heute noch in die Amberger Altstadt gehen kann. Es ist im gotischen Stil gebaut und stammt aus dem Mittelalter. Über eine kleine Brücke über den alten Stadtgraben kommst du hindurch. Damit hast du fast die ganze Stadtmauer umrundet!",
+    task:"Durch wie viele erhaltene Stadttore kann man heute in Ambergs Altstadt gehen? (Du hast schon mehrere gesehen!)",
+    answers:["4","vier"],
+    hint:"Zähl mit: Nabburger Tor, Vilstor, Wingershofer Tor und Ziegeltor."
+  }
+];
+
+/* Schlussfakt auf der Gewinner-Seite */
+const FINAL_FACT = "Wusstest du? Amberg wurde schon im Jahr 1034 zum ersten Mal in einer Urkunde erwähnt – und aus Amberg stammt der Erfinder des Spiels „Mensch ärgere dich nicht“!";
+
+/* =========================================================================
+   ▓▓▓  AB HIER: Programm-Logik – normalerweise nichts ändern nötig  ▓▓▓
+   ========================================================================= */
+
+const STORE_KEY = "amberg_zeitreise_v1";
+let state = load() || { started:false, solved:[], theme:"light", testMode:false };
+if(!Array.isArray(state.solved)) state.solved = [];
+
+const main = document.getElementById('main');
+let watchId=null, geoOk=null, curPos=null, heading=null, activeStation=null, wrongCount={};
+
+/* ---------- Speicher ---------- */
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){ return null; } }
+
+/* ---------- Theme ---------- */
+function applyTheme(){ document.documentElement.setAttribute('data-theme', state.theme==="dark"?"dark":"light");
+  document.getElementById('btnTheme').textContent = state.theme==="dark" ? "☀️" : "🌙"; }
+document.getElementById('btnTheme').onclick = ()=>{ state.theme = state.theme==="dark"?"light":"dark"; save(); applyTheme(); };
+document.getElementById('btnHome').onclick = ()=>{ if(state.started) showHub(); };
+applyTheme();
+
+/* ---------- Antwort-Vergleich (tolerant, mit Dezimalkomma) ---------- */
+function norm(s){
+  return (s||"").toString().toLowerCase().trim()
+    .replace(/ß/g,"ss").replace(/[.!?]+$/,"")
+    .replace(/,(\d)/g,".$1")     // Dezimalkomma -> Punkt für Zahlen
+    .replace(/\s+/g," ");
+}
+function isCorrect(input, answers){
+  const a = norm(input);
+  if(!a) return false;
+  return answers.some(ans=>{
+    const n = norm(ans);
+    if(a===n) return true;
+    if(n.length>=4 && a.includes(n)) return true; // "der marktplatz" enthält "marktplatz"
+    return false;
+  });
+}
+
+/* ---------- Geometrie: Entfernung & Peilung ---------- */
+function toRad(d){return d*Math.PI/180;}
+function distanceM(a,b){
+  const R=6371000, dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+  const s=Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function bearing(a,b){
+  const y=Math.sin(toRad(b.lng-a.lng))*Math.cos(toRad(b.lat));
+  const x=Math.cos(toRad(a.lat))*Math.sin(toRad(b.lat)) - Math.sin(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.cos(toRad(b.lng-a.lng));
+  return (Math.atan2(y,x)*180/Math.PI + 360)%360;
+}
+function compassName(deg){
+  const dirs=["Norden ↑","Nordosten ↗","Osten →","Südosten ↘","Süden ↓","Südwesten ↙","Westen ←","Nordwesten ↖"];
+  return dirs[Math.round(deg/45)%8];
+}
+
+/* ---------- GPS starten ---------- */
+function startGeo(){
+  if(!("geolocation" in navigator)){ geoOk=false; return; }
+  if(watchId!==null) return;
+  watchId = navigator.geolocation.watchPosition(
+    p=>{ geoOk=true; curPos={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy}; refreshRadar(); },
+    e=>{ geoOk=false; refreshRadar(); },
+    { enableHighAccuracy:true, maximumAge:2000, timeout:15000 }
+  );
+}
+/* ---------- Kompass (Ausrichtung) ---------- */
+function onOrient(e){
+  if(typeof e.webkitCompassHeading==="number"){ heading=e.webkitCompassHeading; }
+  else if(e.absolute && typeof e.alpha==="number"){ heading=(360-e.alpha)%360; }
+  else if(typeof e.alpha==="number"){ heading=(360-e.alpha)%360; }
+  refreshNeedle();
+}
+function enableCompass(){
+  if(typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function"){
+    DeviceOrientationEvent.requestPermission().then(r=>{ if(r==="granted"){ window.addEventListener("deviceorientation",onOrient,true);} }).catch(()=>{});
+  } else {
+    window.addEventListener("deviceorientationabsolute",onOrient,true);
+    window.addEventListener("deviceorientation",onOrient,true);
+  }
+  const b=document.getElementById('btnCompass'); if(b) b.textContent="Kompass aktiv ✓";
+}
+
+/* =========================================================================
+   BILDSCHIRME
+   ========================================================================= */
+
+/* ---------- START / Rätseltor ---------- */
+function showStart(){
+  stopRadar();
+  main.innerHTML = `
+    <div class="card centered">
+      <div class="eyebrow">Grundschul-Schnitzeljagd</div>
+      <h1>🕰️ Zeitreise durch<br>die Amberger Altstadt</h1>
+      <p class="lead">Werde zum Stadtdetektiv! An <b>10 Stationen</b> lernst du Ambergs
+      Geschichte kennen und löst an jedem Ort eine Aufgabe. Für jede gelöste Aufgabe
+      bekommst du einen Stein – am Ende bilden sie ein geheimes Lösungswort.</p>
+      <div class="divider"></div>
+      <div class="badge">🔑 Rätseltor</div>
+      <p><b>Löse zuerst dieses Rätsel, um zu starten:</b><br>
+      „Ich bin eine Brille, doch niemand setzt mich auf.
+      Ich liege im Wasser der Vils. Wie heiße ich?“</p>
+      <div class="answer-row">
+        <input type="text" id="riddleIn" placeholder="Deine Antwort …" autocomplete="off" enterkeyhint="go">
+        <button class="btn secondary" style="width:auto;padding:14px 18px" id="riddleGo">Los</button>
+      </div>
+      <div class="feedback" id="riddleFb"></div>
+    </div>
+    <div class="card">
+      <h2>So funktioniert's</h2>
+      <p>📍 Dein Handy zeigt dir mit einem <b>Kompass</b> die Richtung und die Entfernung zur nächsten Station.
+      Bist du nah genug dran, kannst du die Aufgabe lösen.</p>
+      <p>🧱 Jede richtige Antwort mauert einen Stein in deine <b>Stadtmauer</b>.</p>
+      <p class="small-muted">Tipp: Erlaube dem Handy den Zugriff auf den Standort, wenn es fragt.</p>
+      <button class="link" id="startTest">Für die Lehrkraft: ohne GPS testen</button>
+    </div>`;
+  const go=()=>{
+    const v=document.getElementById('riddleIn').value;
+    if(isCorrect(v, SETTINGS.startRiddleAnswer)){ state.started=true; save(); beginHunt(); }
+    else { const fb=document.getElementById('riddleFb'); fb.className="feedback no"; fb.textContent="Noch nicht ganz – Tipp: Es ist Ambergs Wahrzeichen über dem Fluss. 👓"; }
+  };
+  document.getElementById('riddleGo').onclick=go;
+  document.getElementById('riddleIn').addEventListener('keydown',e=>{ if(e.key==="Enter") go(); });
+  document.getElementById('startTest').onclick=()=>askTeacher(()=>{ state.testMode=true; state.started=true; save(); beginHunt(); });
+}
+
+function beginHunt(){
+  if(SETTINGS.requireGPS && !state.testMode) startGeo();
+  showHub();
+}
+
+/* ---------- ÜBERSICHT (Hub) ---------- */
+function nextIndex(){
+  for(let i=0;i<STATIONS.length;i++){ if(!state.solved.includes(i)) return i; }
+  return -1; // alles gelöst
+}
+function unlockedForList(i){
+  if(!SETTINGS.sequential) return true;
+  if(state.solved.includes(i)) return true;
+  return i===nextIndex();
+}
+
+function wallHTML(){
+  const w=SETTINGS.solutionWord;
+  let bricks="";
+  for(let i=0;i<STATIONS.length;i++){
+    const filled=state.solved.includes(i);
+    bricks+=`<div class="brick ${filled?'filled':''}">${filled?(STATIONS[i].letter||"■"):"■"}</div>`;
+  }
+  return `<div class="wall">${bricks}</div>
+          <div class="wall-cap">${state.solved.length} von ${STATIONS.length} Steinen gesammelt</div>`;
+}
+
+function showHub(){
+  stopRadar();
+  const done=state.solved.length;
+  if(done===STATIONS.length){ showFinal(); return; }
+  let items="";
+  STATIONS.forEach((s,i)=>{
+    const solved=state.solved.includes(i);
+    const open=unlockedForList(i);
+    const cls = solved?"done":(open?"":"locked");
+    const state_icon = solved?"✅":(open?"➡️":"🔒");
+    items += `<button class="station-item ${cls}" data-i="${i}" ${open?"":"disabled"}>
+        <div class="num">${i+1}</div>
+        <div class="st-body">
+          <div class="st-name">${s.emoji} ${s.name}</div>
+          <div class="st-sub">${solved?"Gelöst":(open?"Deine nächste Station":"Erst noch gesperrt")}</div>
+        </div>
+        <div class="st-state">${state_icon}</div>
+      </button>`;
+  });
+  main.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Dein Fortschritt</div>
+      ${wallHTML()}
+    </div>
+    <div class="card">
+      <h2>Stationen</h2>
+      ${items}
+      ${state.testMode?'<p class="small-muted centered">🧪 Test-Modus aktiv – Aufgaben ohne GPS spielbar.</p>':''}
+    </div>
+    <button class="link" id="reset">Fortschritt zurücksetzen</button>`;
+  main.querySelectorAll('.station-item').forEach(b=>{
+    if(!b.disabled) b.onclick=()=>openStation(parseInt(b.dataset.i,10));
+  });
+  document.getElementById('reset').onclick=()=>{
+    if(confirm("Wirklich von vorne beginnen? Alle Steine gehen verloren.")){
+      state={ started:true, solved:[], theme:state.theme, testMode:state.testMode }; save(); showHub();
+    }
+  };
+}
+
+/* ---------- STATION ---------- */
+function openStation(i){
+  activeStation=i;
+  const s=STATIONS[i];
+  const solved=state.solved.includes(i);
+  const gpsGate = SETTINGS.requireGPS && !state.testMode && !solved;
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Station ${i+1} von ${STATIONS.length}</div>
+      <h1>${s.emoji} ${s.name}</h1>
+      <div id="stationInner"></div>
+    </div>
+    <button class="btn ghost small" id="backHub">← Zurück zur Übersicht</button>`;
+  document.getElementById('backHub').onclick=showHub;
+
+  if(solved){ renderTask(i,true); return; }
+  if(gpsGate){ renderRadar(i); }
+  else { renderTask(i,false); }
+}
+
+/* Radar-Ansicht bis die Station erreicht ist */
+function renderRadar(i){
+  const s=STATIONS[i];
+  const inner=document.getElementById('stationInner');
+  inner.innerHTML = `
+    <p class="badge grey">🎯 Finde diesen Ort</p>
+    <div class="finder-hint">${s.finder}</div>
+    <div class="radar-wrap" style="margin-top:14px">
+      <div class="compass">
+        <span class="cardinal n">N</span><span class="cardinal e">O</span>
+        <span class="cardinal s">S</span><span class="cardinal w">W</span>
+        <div class="needle" id="needle"></div>
+      </div>
+      <div class="dist" id="distTxt">– <small>m</small></div>
+      <div class="proximity prox-cold" id="proxTxt">Suche GPS …</div>
+    </div>
+    <p class="gps-note" id="gpsNote"></p>
+    <button class="btn secondary small" id="btnCompass" style="margin-top:6px">Kompass aktivieren</button>
+    <div class="divider"></div>
+    <button class="btn ghost small" id="manualUnlock">Ich bin da – Station mit Code freischalten</button>`;
+  document.getElementById('btnCompass').onclick=enableCompass;
+  document.getElementById('manualUnlock').onclick=()=>askTeacher(()=>renderTask(i,false));
+  if(!(SETTINGS.requireGPS)) return;
+  startGeo();
+  refreshRadar();
+}
+
+function refreshRadar(){
+  if(activeStation===null) return;
+  const distEl=document.getElementById('distTxt'); if(!distEl) return; // nicht auf Radar-Screen
+  const s=STATIONS[activeStation];
+  const note=document.getElementById('gpsNote');
+  const prox=document.getElementById('proxTxt');
+  if(geoOk===false || !curPos){
+    distEl.innerHTML=`– <small>m</small>`;
+    prox.className="proximity prox-cold"; prox.textContent="Warte auf GPS-Signal …";
+    if(note) note.textContent="Standort erlauben. Draußen und mit gutem Empfang klappt es am besten. Notfalls unten den Code-Knopf nutzen.";
+    return;
+  }
+  const d=Math.round(distanceM(curPos,s.coords));
+  distEl.innerHTML=`${d} <small>m</small>`;
+  if(note) note.textContent = curPos.acc?`Genauigkeit ca. ±${Math.round(curPos.acc)} m`:"";
+  if(d<=SETTINGS.unlockRadiusM){
+    if(navigator.vibrate) navigator.vibrate([80,50,80]);
+    renderTask(activeStation,false); return;
+  }
+  if(d<80){ prox.className="proximity prox-hot"; prox.textContent="🔥 Ganz nah – such den Ort!"; }
+  else if(d<250){ prox.className="proximity prox-warm"; prox.textContent="🙂 Wärmer … weiter so!"; }
+  else { prox.className="proximity prox-cold"; prox.textContent="❄️ Noch ein Stück – lauf los!"; }
+  refreshNeedle();
+}
+function refreshNeedle(){
+  const n=document.getElementById('needle'); if(!n||activeStation===null||!curPos) return;
+  const s=STATIONS[activeStation];
+  const brg=bearing(curPos,s.coords);
+  let rot=brg;
+  const prox=document.getElementById('proxTxt');
+  if(heading!==null){ rot=brg-heading; }
+  else if(prox && prox.textContent.indexOf("Richtung")===-1){
+    /* ohne Kompass: Himmelsrichtung als Text ergänzen */
+    const base=prox.textContent.split(" · ")[0];
+    prox.textContent = base+" · Richtung "+compassName(brg);
+  }
+  n.style.transform=`rotate(${rot}deg)`;
+}
+function stopRadar(){ activeStation=null; }
+
+/* Aufgabe anzeigen */
+function renderTask(i, alreadySolved){
+  activeStation=i;
+  const s=STATIONS[i];
+  const inner=document.getElementById('stationInner');
+  wrongCount[i]=wrongCount[i]||0;
+  inner.innerHTML = `
+    <p class="badge">📖 Geschichte</p>
+    <p class="lead">${s.history}</p>
+    <div class="divider"></div>
+    <p class="badge" style="background:var(--accent2)">🧩 Deine Aufgabe</p>
+    <p class="lead"><b>${s.task}</b></p>
+    ${alreadySolved ? `
+      <p class="feedback ok">✅ Schon gelöst! Du hast den Stein „${s.letter}“ bekommen.</p>
+      <button class="btn secondary" id="toNext">Weiter →</button>
+    ` : `
+      <div class="answer-row">
+        <input type="text" id="ansIn" placeholder="Deine Antwort …" autocomplete="off" enterkeyhint="done">
+        <button class="btn" style="width:auto;padding:14px 18px" id="ansGo">Prüfen</button>
+      </div>
+      <div class="feedback" id="ansFb"></div>
+      <button class="link hidden" id="showHint">Ich brauche einen Tipp 💡</button>
+      <div class="hintbox hidden" id="hintBox">💡 ${s.hint}</div>
+    `}`;
+
+  if(alreadySolved){
+    document.getElementById('toNext').onclick=showHub; return;
+  }
+  const go=()=>{
+    const val=document.getElementById('ansIn').value;
+    const fb=document.getElementById('ansFb');
+    if(isCorrect(val, s.answers)){
+      if(!state.solved.includes(i)){ state.solved.push(i); save(); }
+      fb.className="feedback ok";
+      fb.innerHTML=`✅ Richtig! Du erhältst den Stein „<b>${s.letter}</b>“.`;
+      celebrate();
+      const box=inner.querySelector('.answer-row'); if(box) box.style.display="none";
+      const sh=document.getElementById('showHint'); if(sh) sh.classList.add('hidden');
+      const nx=document.createElement('button'); nx.className="btn secondary"; nx.style.marginTop="12px";
+      nx.textContent = (state.solved.length===STATIONS.length) ? "🎉 Zum Lösungswort" : "Weiter zur nächsten Station →";
+      nx.onclick=()=> (state.solved.length===STATIONS.length)?showFinal():showHub();
+      inner.appendChild(nx);
+    } else {
+      wrongCount[i]++;
+      fb.className="feedback no";
+      fb.textContent = wrongCount[i]>=2 ? "Noch nicht richtig – schau dir den Tipp an. 👇" : "Das stimmt noch nicht ganz. Versuch es noch einmal!";
+      if(wrongCount[i]>=2){ document.getElementById('showHint').classList.remove('hidden'); }
+    }
+  };
+  document.getElementById('ansGo').onclick=go;
+  document.getElementById('ansIn').addEventListener('keydown',e=>{ if(e.key==="Enter") go(); });
+  document.getElementById('showHint').onclick=()=>document.getElementById('hintBox').classList.remove('hidden');
+}
+
+/* ---------- FINALE ---------- */
+function showFinal(){
+  stopRadar();
+  celebrate(true);
+  main.innerHTML = `
+    <div class="card centered">
+      <div class="eyebrow">Geschafft!</div>
+      <h1>🏆 Du hast es<br>durch Amberg geschafft!</h1>
+      ${wallHTML()}
+      <div class="divider"></div>
+      <p class="lead">Alle Steine ergeben zusammen dein Lösungswort:</p>
+      <h2 style="font-size:30px;letter-spacing:4px;color:var(--accent2)">${SETTINGS.solutionWord}</h2>
+      <p class="lead">Genau das umgibt die ganze Altstadt – die berühmte Amberger <b>Stadtmauer</b>, das „Amberger Ei“.</p>
+      <div class="hintbox" style="border-color:var(--accent);text-align:left">${FINAL_FACT}</div>
+      <button class="btn" id="again" style="margin-top:16px">Noch einmal spielen</button>
+    </div>`;
+  document.getElementById('again').onclick=()=>{
+    state={ started:true, solved:[], theme:state.theme, testMode:state.testMode }; save(); showHub();
+  };
+}
+
+/* ---------- Kleine Effekte & Lehrer-Code ---------- */
+function celebrate(big){
+  const em=["🎉","🧱","⭐","🏰","👑","🎊"]; const n=big?26:12;
+  for(let k=0;k<n;k++){
+    const c=document.createElement('div'); c.className="confetti";
+    c.textContent=em[Math.floor(Math.random()*em.length)];
+    c.style.left=Math.random()*100+"vw";
+    c.style.animationDuration=(2+Math.random()*2)+"s";
+    c.style.animationDelay=(Math.random()*.4)+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4500);
+  }
+}
+function askTeacher(onOk){
+  const code=prompt("Lehrer-/Begleit-Code eingeben:");
+  if(code===null) return;
+  if(code.trim()===String(SETTINGS.teacherCode)){ onOk(); }
+  else alert("Code stimmt nicht.");
+}
+
+/* ---------- Los ---------- */
+if(state.started){ if(SETTINGS.requireGPS && !state.testMode) startGeo(); showHub(); }
+else showStart();
+</script>
+</body>
+</html>
